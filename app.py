@@ -66,7 +66,7 @@ st.title("Emmy's Compression Ratio Calculator")
 # Option for user to choose input type
 option = st.selectbox(
     "Select Input Type:",
-    ["Paste Sitemap URL", "Paste URLs", "Upload an Excel file with URLs"]
+    ["Paste URLs", "Upload an Excel file with URLs"]
 )
 
 # Input fields for the different options
