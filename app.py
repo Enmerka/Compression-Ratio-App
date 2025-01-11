@@ -3,9 +3,9 @@ import requests
 from bs4 import BeautifulSoup
 import gzip
 import pandas as pd
-import re
 import matplotlib.pyplot as plt
 from io import BytesIO
+import json
 
 # Function to fetch and parse a webpage
 def fetch_and_parse(url):
@@ -61,37 +61,29 @@ def calculate_compression_ratio(text):
     compressed_size = len(gzip.compress(text.encode('utf-8')))
     return original_size / compressed_size
 
-# Function to validate email
-def is_valid_email(email):
-    email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
-    return re.match(email_regex, email) is not None
+# Function to add email to Mailchimp
+def add_email_to_mailchimp(email):
+    MAILCHIMP_API_KEY = 'your_mailchimp_api_key'
+    MAILCHIMP_SERVER_PREFIX = 'your_mailchimp_server_prefix'  # e.g., 'us1'
+    LIST_ID = 'your_list_id'
+
+    url = f'https://{MAILCHIMP_SERVER_PREFIX}.api.mailchimp.com/3.0/lists/{LIST_ID}/members/'
+    headers = {
+        'Authorization': f'Bearer {MAILCHIMP_API_KEY}',
+        'Content-Type': 'application/json'
+    }
+    data = {
+        "email_address": email,
+        "status": "subscribed"
+    }
+    response = requests.post(url, headers=headers, data=json.dumps(data))
+    if response.status_code == 200:
+        return True
+    else:
+        return False
 
 # Streamlit app
 st.title("URL Compression Ratio Calculator")
-
-# Sidebar for app instructions
-st.sidebar.title("How to Use This App")
-st.sidebar.markdown("""
-This tool helps content teams calculate the compression ratio of pages to assess the quality and relevance of their content. The compression ratio gives insights into the following:
-
-- **Risk of a future algorithmic penalty**
-- **Absence of page identity**
-- **Potential for ranking instabilities**
-- **Redundancy of words, context, semantics, and entity relationships on the page**
-
-### What is a Compression Ratio?
-The compression ratio is the degree to which a page can be compressed without losing its identity or meaning. A higher compression ratio suggests that the content on the page is redundant, filled with filler words, and potentially low in quality. In contrast, a lower ratio suggests that the page is rich in content.
-
-### Example:
-If a page has 100K words and we can compress it to just one word without losing the essence of the page, the high compression factor indicates that the content was redundant and filler-heavy. Conversely, if a page has 1,000 words but we can only compress it by 10%, this indicates that the content is rich and meaningful.
-
-### Relevance in Content Marketing & SEO:
-Search engines aim to save resources by compressing web content during indexing. Pages with high compression ratios (above 4.0) are considered to be spammy or full of fillers. This can hurt your rankings, cause traffic declines, and increase the risk of algorithmic penalties.
-
-For better content marketing and SEO, focus on creating content that adds value and reduces redundancy, ensuring a low compression ratio.
-
-[Read More Here](https://www.example.com)  # Example link for further reading (replace with actual link)
-""")
 
 # Option for user to choose input type
 option = st.selectbox(
@@ -102,95 +94,106 @@ option = st.selectbox(
 # Define a submit button
 submit_button = st.button("Submit")
 
-# Email input field
-email_input = st.text_input("Enter your email address:")
+# Input fields for the different options
+if option == "Paste Sitemap URL":
+    sitemap_url = st.text_input("Enter Sitemap URL:")
+    urls_input_field = False
+    file_input_field = False
+elif option == "Paste URLs":
+    urls_input_field = st.text_area("Paste URLs here (one per line):")
+    sitemap_url = None
+    file_input_field = False
+elif option == "Upload an Excel file with URLs":
+    file_input_field = st.file_uploader("Upload your Excel file (must contain a column named 'URL')", type=['xlsx'])
+    urls_input_field = False
+    sitemap_url = None
 
-# Only proceed if the submit button is clicked and email is valid
+# Collect email after submitting URLs or Sitemap
+email_input = None
 if submit_button:
-    if email_input and is_valid_email(email_input):
-        # Proceed with main app logic
-        st.success(f"Email {email_input} successfully validated! Proceeding with the app.")
-        
-        compression_ratios = []
-        urls = []
+    compression_ratios = []
+    urls = []
 
-        # URL input handling
-        if option == "Paste Sitemap URL":
-            sitemap_url = st.text_input("Enter Sitemap URL:")
-            if sitemap_url:
-                response = requests.get(sitemap_url)
-                if response.status_code == 200:
-                    sitemap = response.text
-                    soup = BeautifulSoup(sitemap, 'html.parser')
-                    urls = [loc.text for loc in soup.find_all('loc')]
-                    st.write(f"Found {len(urls)} URLs in the Sitemap.")
-        elif option == "Paste URLs":
-            urls_input_field = st.text_area("Paste URLs here (one per line):")
-            if urls_input_field:
-                urls = urls_input_field.split("\n")
-                st.write(f"Found {len(urls)} URLs.")
-        elif option == "Upload an Excel file with URLs":
-            file_input_field = st.file_uploader("Upload your Excel file (must contain a column named 'URL')", type=['xlsx'])
-            if file_input_field:
-                # Read the uploaded Excel file
-                try:
-                    df = pd.read_excel(file_input_field)
-                    if 'URL' not in df.columns:
-                        st.error("The uploaded file must contain a column named 'URL'.")
-                    else:
-                        urls = df['URL'].tolist()
-                        st.write(f"Found {len(urls)} URLs in the Excel file.")
-                except Exception as e:
-                    st.error(f"Error processing the file: {e}")
+    if option == "Paste Sitemap URL" and sitemap_url:
+        response = requests.get(sitemap_url)
+        if response.status_code == 200:
+            sitemap = response.text
+            soup = BeautifulSoup(sitemap, 'html.parser')
+            urls = [loc.text for loc in soup.find_all('loc')]
+            st.write(f"Found {len(urls)} URLs in the Sitemap.")
+                
+    elif option == "Paste URLs" and urls_input_field:
+        urls = urls_input_field.split("\n")
+        st.write(f"Found {len(urls)} URLs.")
 
+    elif option == "Upload an Excel file with URLs" and file_input_field:
+        # Read the uploaded Excel file
+        try:
+            df = pd.read_excel(file_input_field)
+            if 'URL' not in df.columns:
+                st.error("The uploaded file must contain a column named 'URL'.")
+            else:
+                urls = df['URL'].tolist()
+                st.write(f"Found {len(urls)} URLs in the Excel file.")
+        except Exception as e:
+            st.error(f"Error processing the file: {e}")
+
+    if urls:
         # Process the URLs and calculate compression ratios
-        if urls:
-            with st.spinner("Processing URLs..."):
-                for url in urls:
-                    soup = fetch_and_parse(url)
-                    combined_text = extract_text_selectively(soup)
-                    compression_ratio = calculate_compression_ratio(combined_text)
-                    compression_ratios.append(compression_ratio)
+        with st.spinner("Processing URLs..."):
+            for url in urls:
+                soup = fetch_and_parse(url)
+                combined_text = extract_text_selectively(soup)
+                compression_ratio = calculate_compression_ratio(combined_text)
+                compression_ratios.append(compression_ratio)
 
-            # Prepare DataFrame for displaying
-            results_df = pd.DataFrame({'URL': urls, 'Compression Ratio': compression_ratios})
+        # Prepare DataFrame for displaying
+        results_df = pd.DataFrame({'URL': urls, 'Compression Ratio': compression_ratios})
 
-            # Count how many URLs have a compression ratio above 4.0
-            high_compression_ratio_count = sum(ratio > 4.0 for ratio in compression_ratios)
+        # Count how many URLs have a compression ratio above 4.0
+        high_compression_ratio_count = sum(ratio > 4.0 for ratio in compression_ratios)
 
-            # Display the message about pages with compression ratios above 4.0
-            st.markdown(f"**Pages with compression ratios above 4.0: {high_compression_ratio_count}**", unsafe_allow_html=True)
-            
-            # Scrollable table to display the URLs and compression ratios
-            st.subheader("Compression Ratios Table")
-            st.dataframe(results_df, height=300)  # Scrollable table
+        # Display the message about pages with compression ratios above 4.0
+        st.markdown(f"**Here are Pages with Higher compression ratios: {high_compression_ratio_count}**", unsafe_allow_html=True)
+        
+        # Scrollable table to display the URLs and compression ratios
+        st.subheader("Compression Ratios Table")
+        st.dataframe(results_df, height=300)  # Scrollable table
 
-            # Allow download of the results as an Excel file
-            st.subheader("Download Results")
-            output = BytesIO()
-            results_df.to_excel(output, index=False, engine='openpyxl')
-            output.seek(0)
-            st.download_button(
-                label="Download Results as Excel",
-                data=output,
-                file_name="compression_ratios.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+        # Allow download of the results as an Excel file
+        st.subheader("Download Results")
+        output = BytesIO()
+        results_df.to_excel(output, index=False, engine='openpyxl')
+        output.seek(0)
+        st.download_button(
+            label="Download Results as Excel",
+            data=output,
+            file_name="compression_ratios.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
-            # Visualize compression ratios
-            st.subheader("Compression Ratios Visualization")
-            plt.figure(figsize=(12, 8))
-            bars = plt.bar(urls, compression_ratios, color='blue', alpha=0.7, label='Compression Ratio')
-            for i, bar in enumerate(bars):
-                if compression_ratios[i] > 4.0:
-                    bar.set_color('red')
-            plt.axhline(y=4.0, color='orange', linestyle='--', linewidth=2, label='Spam Threshold (4.0)')
-            plt.xticks(rotation=90, fontsize=8)
-            plt.title("Compression Ratios of URLs", fontsize=16)
-            plt.xlabel("URLs", fontsize=12)
-            plt.ylabel("Compression Ratio", fontsize=12)
-            plt.legend()
-            plt.tight_layout()
-            st.pyplot(plt)
-    else:
-        st.error("Please enter a valid email address.")
+        # Visualize compression ratios
+        st.subheader("Compression Ratios Visualization")
+        plt.figure(figsize=(12, 8))
+        bars = plt.bar(urls, compression_ratios, color='blue', alpha=0.7, label='Compression Ratio')
+        for i, bar in enumerate(bars):
+            if compression_ratios[i] > 4.0:
+                bar.set_color('red')
+        plt.axhline(y=4.0, color='orange', linestyle='--', linewidth=2, label='Spam Threshold (4.0)')
+        plt.xticks(rotation=90, fontsize=8)
+        plt.title("Compression Ratios of URLs", fontsize=16)
+        plt.xlabel("URLs", fontsize=12)
+        plt.ylabel("Compression Ratio", fontsize=12)
+        plt.legend()
+        plt.tight_layout()
+        st.pyplot(plt)
+
+        # Now, make the email input field visible
+        email_input = st.text_input("Enter your email to receive the results:")
+
+        if email_input:
+            # Add email to Mailchimp if valid
+            if add_email_to_mailchimp(email_input):
+                st.success(f"Email {email_input} successfully added to the mailing list!")
+            else:
+                st.error("Error adding email to the mailing list.")
