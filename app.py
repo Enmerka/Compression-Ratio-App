@@ -69,55 +69,76 @@ option = st.selectbox(
     ["Paste Sitemap URL", "Paste URLs", "Upload an Excel file with URLs"]
 )
 
-if option == "Paste Sitemap URL":
-    sitemap_url = st.text_input("Enter Sitemap URL:")
-    if sitemap_url:
-        response = requests.get(sitemap_url)
-        if response.status_code == 200:
-            sitemap = response.text
-            soup = BeautifulSoup(sitemap, 'html.parser')
-            urls = [loc.text for loc in soup.find_all('loc')]
-            st.write(f"Found {len(urls)} URLs in the Sitemap.")
-            
-            # Process the URLs and calculate compression ratios
-            compression_ratios = []
-            with st.spinner("Processing URLs..."):
-                for url in urls:
-                    soup = fetch_and_parse(url)
-                    combined_text = extract_text_selectively(soup)
-                    compression_ratio = calculate_compression_ratio(combined_text)
-                    compression_ratios.append(compression_ratio)
+# Define a submit button
+submit_button = st.button("Submit")
 
-            # Visualize compression ratios
-            st.subheader("Compression Ratios Visualization")
-            plt.figure(figsize=(12, 8))
-            bars = plt.bar(urls, compression_ratios, color='blue', alpha=0.7, label='Compression Ratio')
-            for i, bar in enumerate(bars):
-                if compression_ratios[i] > 4.0:
-                    bar.set_color('red')
-            plt.axhline(y=4.0, color='orange', linestyle='--', linewidth=2, label='Spam Threshold (4.0)')
-            plt.xticks(rotation=90, fontsize=8)
-            plt.title("Compression Ratios of URLs", fontsize=16)
-            plt.xlabel("URLs", fontsize=12)
-            plt.ylabel("Compression Ratio", fontsize=12)
-            plt.legend()
-            plt.tight_layout()
-            st.pyplot(plt)
+if submit_button:
+    compression_ratios = []
+    urls = []
 
-elif option == "Paste URLs":
-    urls_input = st.text_area("Paste URLs here (one per line):")
-    if urls_input:
-        urls = urls_input.split("\n")
-        st.write(f"Found {len(urls)} URLs.")
-        
+    if option == "Paste Sitemap URL":
+        sitemap_url = st.text_input("Enter Sitemap URL:")
+        if sitemap_url:
+            response = requests.get(sitemap_url)
+            if response.status_code == 200:
+                sitemap = response.text
+                soup = BeautifulSoup(sitemap, 'html.parser')
+                urls = [loc.text for loc in soup.find_all('loc')]
+                st.write(f"Found {len(urls)} URLs in the Sitemap.")
+                
+    elif option == "Paste URLs":
+        urls_input = st.text_area("Paste URLs here (one per line):")
+        if urls_input:
+            urls = urls_input.split("\n")
+            st.write(f"Found {len(urls)} URLs.")
+
+    elif option == "Upload an Excel file with URLs":
+        uploaded_file = st.file_uploader("Upload your Excel file (must contain a column named 'URL')", type=['xlsx'])
+        if uploaded_file:
+            # Read the uploaded Excel file
+            try:
+                df = pd.read_excel(uploaded_file)
+                if 'URL' not in df.columns:
+                    st.error("The uploaded file must contain a column named 'URL'.")
+                else:
+                    urls = df['URL'].tolist()
+                    st.write(f"Found {len(urls)} URLs in the Excel file.")
+            except Exception as e:
+                st.error(f"Error processing the file: {e}")
+
+    if urls:
         # Process the URLs and calculate compression ratios
-        compression_ratios = []
         with st.spinner("Processing URLs..."):
             for url in urls:
                 soup = fetch_and_parse(url)
                 combined_text = extract_text_selectively(soup)
                 compression_ratio = calculate_compression_ratio(combined_text)
                 compression_ratios.append(compression_ratio)
+
+        # Prepare DataFrame for displaying
+        results_df = pd.DataFrame({'URL': urls, 'Compression Ratio': compression_ratios})
+
+        # Count how many URLs have a compression ratio above 4.0
+        high_compression_ratio_count = sum(ratio > 4.0 for ratio in compression_ratios)
+
+        # Display the message about pages with compression ratios above 4.0
+        st.markdown(f"**Pages with compression ratios above 4.0: {high_compression_ratio_count}**", unsafe_allow_html=True)
+        
+        # Scrollable table to display the URLs and compression ratios
+        st.subheader("Compression Ratios Table")
+        st.dataframe(results_df, height=300)  # Scrollable table
+
+        # Allow download of the results as an Excel file
+        st.subheader("Download Results")
+        output = BytesIO()
+        results_df.to_excel(output, index=False, engine='openpyxl')
+        output.seek(0)
+        st.download_button(
+            label="Download Results as Excel",
+            data=output,
+            file_name="compression_ratios.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
         # Visualize compression ratios
         st.subheader("Compression Ratios Visualization")
@@ -134,58 +155,3 @@ elif option == "Paste URLs":
         plt.legend()
         plt.tight_layout()
         st.pyplot(plt)
-
-elif option == "Upload an Excel file with URLs":
-    uploaded_file = st.file_uploader("Upload your Excel file (must contain a column named 'URL')", type=['xlsx'])
-    if uploaded_file:
-        # Read the uploaded Excel file
-        try:
-            df = pd.read_excel(uploaded_file)
-            if 'URL' not in df.columns:
-                st.error("The uploaded file must contain a column named 'URL'.")
-            else:
-                compression_ratios = []
-                with st.spinner("Processing URLs..."):
-                    for index, row in df.iterrows():
-                        url = row['URL']
-                        soup = fetch_and_parse(url)
-                        combined_text = extract_text_selectively(soup)
-                        compression_ratio = calculate_compression_ratio(combined_text)
-                        compression_ratios.append(compression_ratio)
-                
-                # Add compression ratios to DataFrame
-                df['Compression Ratio'] = compression_ratios
-
-                st.success("Processing completed!")
-                st.write("Here are the results:")
-                st.dataframe(df)
-
-                # Allow download of results
-                output = BytesIO()
-                df.to_excel(output, index=False, engine='openpyxl')
-                output.seek(0)
-                st.download_button(
-                    label="Download Results as Excel",
-                    data=output,
-                    file_name="compression_ratios.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-
-                # Visualize compression ratios
-                st.subheader("Compression Ratios Visualization")
-                plt.figure(figsize=(12, 8))
-                bars = plt.bar(df['URL'], df['Compression Ratio'], color='blue', alpha=0.7, label='Compression Ratio')
-                for i, bar in enumerate(bars):
-                    if df['Compression Ratio'][i] > 4.0:
-                        bar.set_color('red')
-                plt.axhline(y=4.0, color='orange', linestyle='--', linewidth=2, label='Spam Threshold (4.0)')
-                plt.xticks(rotation=90, fontsize=8)
-                plt.title("Compression Ratios of URLs", fontsize=16)
-                plt.xlabel("URLs", fontsize=12)
-                plt.ylabel("Compression Ratio", fontsize=12)
-                plt.legend()
-                plt.tight_layout()
-                st.pyplot(plt)
-
-        except Exception as e:
-            st.error(f"Error processing the file: {e}")
