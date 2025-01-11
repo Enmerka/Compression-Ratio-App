@@ -131,7 +131,7 @@ if submit_button:
         high_compression_ratio_count = sum(ratio > 4.0 for ratio in compression_ratios)
 
         # Display the message about pages with compression ratios above 4.0
-        st.markdown(f"**Pages with compression ratios above 4.0: {high_compression_ratio_count}**", unsafe_allow_html=True)
+        st.markdown(f"**Here are Pages with Higher compression ratios: {high_compression_ratio_count}**", unsafe_allow_html=True)
         
         # Scrollable table to display the URLs and compression ratios
         st.subheader("Compression Ratios Table")
