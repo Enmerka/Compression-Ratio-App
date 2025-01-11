@@ -5,7 +5,6 @@ import gzip
 import pandas as pd
 import matplotlib.pyplot as plt
 from io import BytesIO
-import json
 
 # Function to fetch and parse a webpage
 def fetch_and_parse(url):
@@ -61,27 +60,6 @@ def calculate_compression_ratio(text):
     compressed_size = len(gzip.compress(text.encode('utf-8')))
     return original_size / compressed_size
 
-# Function to add email to Mailchimp
-def add_email_to_mailchimp(email):
-    MAILCHIMP_API_KEY = 'your_mailchimp_api_key'
-    MAILCHIMP_SERVER_PREFIX = 'your_mailchimp_server_prefix'  # e.g., 'us1'
-    LIST_ID = 'your_list_id'
-
-    url = f'https://{MAILCHIMP_SERVER_PREFIX}.api.mailchimp.com/3.0/lists/{LIST_ID}/members/'
-    headers = {
-        'Authorization': f'Bearer {MAILCHIMP_API_KEY}',
-        'Content-Type': 'application/json'
-    }
-    data = {
-        "email_address": email,
-        "status": "subscribed"
-    }
-    response = requests.post(url, headers=headers, data=json.dumps(data))
-    if response.status_code == 200:
-        return True
-    else:
-        return False
-
 # Streamlit app
 st.title("URL Compression Ratio Calculator")
 
@@ -108,8 +86,7 @@ elif option == "Upload an Excel file with URLs":
     urls_input_field = False
     sitemap_url = None
 
-# Collect email after submitting URLs or Sitemap
-email_input = None
+# Only proceed if the submit button is pressed
 if submit_button:
     compression_ratios = []
     urls = []
@@ -188,12 +165,23 @@ if submit_button:
         plt.tight_layout()
         st.pyplot(plt)
 
-        # Now, make the email input field visible
-        email_input = st.text_input("Enter your email to receive the results:")
+# Sidebar for app instructions
+st.sidebar.title("How to Use This App")
+st.sidebar.markdown("""
+This tool helps content teams calculate the compression ratio of pages in order assess the quality and relevance of their content. The compression ratio gives insights into the following:
 
-        if email_input:
-            # Add email to Mailchimp if valid
-            if add_email_to_mailchimp(email_input):
-                st.success(f"Email {email_input} successfully added to the mailing list!")
-            else:
-                st.error("Error adding email to the mailing list.")
+- **Risk of a future algorithmic penalty**
+- **Absence of page identity**
+- **Potential for ranking instabilities**
+- **Redundancy of words, context, semantics, and entity relationships on the page**
+
+### What is a Compression Ratio?
+The compression ratio is the degree to which a page can be compressed without losing its identity or meaning. A higher compression ratio suggests that the content on the page is redundant, filled with filler words, and potentially low in quality. In contrast, a lower ratio suggests that the page is rich in content.
+
+### Relevance in Content Marketing & SEO:
+Search engines aim to save resources by compressing web content during indexing. Pages with high compression ratios (above 4.0) are considered to be spammy or full of fillers. This can hurt your rankings, cause traffic declines, and increase the risk of algorithmic penalties.
+
+For better content marketing and SEO, focus on creating content that adds value and reduces redundancy, ensuring a low compression ratio.
+
+[Read More Here](https://gofishdigital.com/blog/identify-low-quality-pages-compression-python-seo/)  )
+""")
