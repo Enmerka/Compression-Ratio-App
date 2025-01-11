@@ -88,28 +88,12 @@ if option == "Paste Sitemap URL":
                     compression_ratio = calculate_compression_ratio(combined_text)
                     compression_ratios.append(compression_ratio)
 
-            # Find the number of URLs with compression ratios above 4.0
-            high_compression_count = sum(1 for ratio in compression_ratios if ratio > 4.0)
-
-            # Display the bolded message in red
-            st.markdown(f"**<span style='color:red'>Number of pages with compression ratios above 4.0: {high_compression_count}</span>**", unsafe_allow_html=True)
-
-            # Create a DataFrame for the URLs and compression ratios
-            df = pd.DataFrame({
-                'URL': urls,
-                'Compression Ratio': compression_ratios
-            })
-
-            # Display the scrollable table
-            st.subheader("URLs and Compression Ratios")
-            st.dataframe(df, use_container_width=True)
-
             # Visualize compression ratios
             st.subheader("Compression Ratios Visualization")
             plt.figure(figsize=(12, 8))
-            bars = plt.bar(df['URL'], df['Compression Ratio'], color='blue', alpha=0.7, label='Compression Ratio')
+            bars = plt.bar(urls, compression_ratios, color='blue', alpha=0.7, label='Compression Ratio')
             for i, bar in enumerate(bars):
-                if df['Compression Ratio'][i] > 4.0:
+                if compression_ratios[i] > 4.0:
                     bar.set_color('red')
             plt.axhline(y=4.0, color='orange', linestyle='--', linewidth=2, label='Spam Threshold (4.0)')
             plt.xticks(rotation=90, fontsize=8)
@@ -119,19 +103,6 @@ if option == "Paste Sitemap URL":
             plt.legend()
             plt.tight_layout()
             st.pyplot(plt)
-
-            # Create an Excel file for download
-            output = BytesIO()
-            df.to_excel(output, index=False, engine='openpyxl')
-            output.seek(0)
-
-            # Provide the download button for the Excel file
-            st.download_button(
-                label="Download Compression Ratios as Excel",
-                data=output,
-                file_name="compression_ratios.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
 
 elif option == "Paste URLs":
     urls_input = st.text_area("Paste URLs here (one per line):")
@@ -148,28 +119,12 @@ elif option == "Paste URLs":
                 compression_ratio = calculate_compression_ratio(combined_text)
                 compression_ratios.append(compression_ratio)
 
-        # Find the number of URLs with compression ratios above 4.0
-        high_compression_count = sum(1 for ratio in compression_ratios if ratio > 4.0)
-
-        # Display the bolded message in red
-        st.markdown(f"**<span style='color:red'>Number of pages with compression ratios above 4.0: {high_compression_count}</span>**", unsafe_allow_html=True)
-
-        # Create a DataFrame for the URLs and compression ratios
-        df = pd.DataFrame({
-            'URL': urls,
-            'Compression Ratio': compression_ratios
-        })
-
-        # Display the scrollable table
-        st.subheader("URLs and Compression Ratios")
-        st.dataframe(df, use_container_width=True)
-
         # Visualize compression ratios
         st.subheader("Compression Ratios Visualization")
         plt.figure(figsize=(12, 8))
-        bars = plt.bar(df['URL'], df['Compression Ratio'], color='blue', alpha=0.7, label='Compression Ratio')
+        bars = plt.bar(urls, compression_ratios, color='blue', alpha=0.7, label='Compression Ratio')
         for i, bar in enumerate(bars):
-            if df['Compression Ratio'][i] > 4.0:
+            if compression_ratios[i] > 4.0:
                 bar.set_color('red')
         plt.axhline(y=4.0, color='orange', linestyle='--', linewidth=2, label='Spam Threshold (4.0)')
         plt.xticks(rotation=90, fontsize=8)
@@ -179,19 +134,6 @@ elif option == "Paste URLs":
         plt.legend()
         plt.tight_layout()
         st.pyplot(plt)
-
-        # Create an Excel file for download
-        output = BytesIO()
-        df.to_excel(output, index=False, engine='openpyxl')
-        output.seek(0)
-
-        # Provide the download button for the Excel file
-        st.download_button(
-            label="Download Compression Ratios as Excel",
-            data=output,
-            file_name="compression_ratios.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
 
 elif option == "Upload an Excel file with URLs":
     uploaded_file = st.file_uploader("Upload your Excel file (must contain a column named 'URL')", type=['xlsx'])
@@ -217,12 +159,6 @@ elif option == "Upload an Excel file with URLs":
                 st.success("Processing completed!")
                 st.write("Here are the results:")
                 st.dataframe(df)
-
-                # Find the number of URLs with compression ratios above 4.0
-                high_compression_count = sum(1 for ratio in compression_ratios if ratio > 4.0)
-
-                # Display the bolded message in red
-                st.markdown(f"**<span style='color:red'>Number of pages with compression ratios above 4.0: {high_compression_count}</span>**", unsafe_allow_html=True)
 
                 # Allow download of results
                 output = BytesIO()
@@ -250,3 +186,6 @@ elif option == "Upload an Excel file with URLs":
                 plt.legend()
                 plt.tight_layout()
                 st.pyplot(plt)
+
+        except Exception as e:
+            st.error(f"Error processing the file: {e}")
