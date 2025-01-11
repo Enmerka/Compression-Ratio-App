@@ -72,9 +72,8 @@ option = st.selectbox(
 if option == "Paste Sitemap URL":
     sitemap_url = st.text_input("Enter Sitemap URL:")
     if sitemap_url:
-        try:
-            response = requests.get(sitemap_url)
-            response.raise_for_status()
+        response = requests.get(sitemap_url)
+        if response.status_code == 200:
             sitemap = response.text
             soup = BeautifulSoup(sitemap, 'html.parser')
             urls = [loc.text for loc in soup.find_all('loc')]
@@ -107,22 +106,19 @@ if option == "Paste Sitemap URL":
 
             # Visualize compression ratios
             st.subheader("Compression Ratios Visualization")
-            try:
-                plt.figure(figsize=(12, 8))
-                bars = plt.bar(df['URL'], df['Compression Ratio'], color='blue', alpha=0.7, label='Compression Ratio')
-                for i, bar in enumerate(bars):
-                    if df['Compression Ratio'][i] > 4.0:
-                        bar.set_color('red')
-                plt.axhline(y=4.0, color='orange', linestyle='--', linewidth=2, label='Spam Threshold (4.0)')
-                plt.xticks(rotation=90, fontsize=8)
-                plt.title("Compression Ratios of URLs", fontsize=16)
-                plt.xlabel("URLs", fontsize=12)
-                plt.ylabel("Compression Ratio", fontsize=12)
-                plt.legend()
-                plt.tight_layout()
-                st.pyplot(plt)
-            except Exception as e:
-                st.error(f"Error generating the plot: {e}")
+            plt.figure(figsize=(12, 8))
+            bars = plt.bar(df['URL'], df['Compression Ratio'], color='blue', alpha=0.7, label='Compression Ratio')
+            for i, bar in enumerate(bars):
+                if df['Compression Ratio'][i] > 4.0:
+                    bar.set_color('red')
+            plt.axhline(y=4.0, color='orange', linestyle='--', linewidth=2, label='Spam Threshold (4.0)')
+            plt.xticks(rotation=90, fontsize=8)
+            plt.title("Compression Ratios of URLs", fontsize=16)
+            plt.xlabel("URLs", fontsize=12)
+            plt.ylabel("Compression Ratio", fontsize=12)
+            plt.legend()
+            plt.tight_layout()
+            st.pyplot(plt)
 
             # Create an Excel file for download
             output = BytesIO()
@@ -136,9 +132,6 @@ if option == "Paste Sitemap URL":
                 file_name="compression_ratios.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
-
-        except requests.RequestException as e:
-            st.error(f"Error fetching Sitemap URL {sitemap_url}: {e}")
 
 elif option == "Paste URLs":
     urls_input = st.text_area("Paste URLs here (one per line):")
@@ -173,22 +166,19 @@ elif option == "Paste URLs":
 
         # Visualize compression ratios
         st.subheader("Compression Ratios Visualization")
-        try:
-            plt.figure(figsize=(12, 8))
-            bars = plt.bar(df['URL'], df['Compression Ratio'], color='blue', alpha=0.7, label='Compression Ratio')
-            for i, bar in enumerate(bars):
-                if df['Compression Ratio'][i] > 4.0:
-                    bar.set_color('red')
-            plt.axhline(y=4.0, color='orange', linestyle='--', linewidth=2, label='Spam Threshold (4.0)')
-            plt.xticks(rotation=90, fontsize=8)
-            plt.title("Compression Ratios of URLs", fontsize=16)
-            plt.xlabel("URLs", fontsize=12)
-            plt.ylabel("Compression Ratio", fontsize=12)
-            plt.legend()
-            plt.tight_layout()
-            st.pyplot(plt)
-        except Exception as e:
-            st.error(f"Error generating the plot: {e}")
+        plt.figure(figsize=(12, 8))
+        bars = plt.bar(df['URL'], df['Compression Ratio'], color='blue', alpha=0.7, label='Compression Ratio')
+        for i, bar in enumerate(bars):
+            if df['Compression Ratio'][i] > 4.0:
+                bar.set_color('red')
+        plt.axhline(y=4.0, color='orange', linestyle='--', linewidth=2, label='Spam Threshold (4.0)')
+        plt.xticks(rotation=90, fontsize=8)
+        plt.title("Compression Ratios of URLs", fontsize=16)
+        plt.xlabel("URLs", fontsize=12)
+        plt.ylabel("Compression Ratio", fontsize=12)
+        plt.legend()
+        plt.tight_layout()
+        st.pyplot(plt)
 
         # Create an Excel file for download
         output = BytesIO()
@@ -245,3 +235,18 @@ elif option == "Upload an Excel file with URLs":
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
 
+                # Visualize compression ratios
+                st.subheader("Compression Ratios Visualization")
+                plt.figure(figsize=(12, 8))
+                bars = plt.bar(df['URL'], df['Compression Ratio'], color='blue', alpha=0.7, label='Compression Ratio')
+                for i, bar in enumerate(bars):
+                    if df['Compression Ratio'][i] > 4.0:
+                        bar.set_color('red')
+                plt.axhline(y=4.0, color='orange', linestyle='--', linewidth=2, label='Spam Threshold (4.0)')
+                plt.xticks(rotation=90, fontsize=8)
+                plt.title("Compression Ratios of URLs", fontsize=16)
+                plt.xlabel("URLs", fontsize=12)
+                plt.ylabel("Compression Ratio", fontsize=12)
+                plt.legend()
+                plt.tight_layout()
+                st.pyplot(plt)
