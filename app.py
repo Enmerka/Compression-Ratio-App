@@ -168,7 +168,7 @@ if submit_button:
 # Sidebar for app instructions
 st.sidebar.title("How to Use This App")
 st.sidebar.markdown("""
-This tool helps content teams calculate the compression ratio of pages to assess the quality and relevance of their content. The compression ratio gives insights into the following:
+This tool helps content teams calculate the compression ratio of pages in order assess the quality and relevance of their content. The compression ratio gives insights into the following:
 
 - **Risk of a future algorithmic penalty**
 - **Absence of page identity**
@@ -177,9 +177,6 @@ This tool helps content teams calculate the compression ratio of pages to assess
 
 ### What is a Compression Ratio?
 The compression ratio is the degree to which a page can be compressed without losing its identity or meaning. A higher compression ratio suggests that the content on the page is redundant, filled with filler words, and potentially low in quality. In contrast, a lower ratio suggests that the page is rich in content.
-
-### Example:
-If a page has 100K words and we can compress it to just one word without losing the essence of the page, the high compression factor indicates that the content was redundant and filler-heavy. Conversely, if a page has 1,000 words but we can only compress it by 10%, this indicates that the content is rich and meaningful.
 
 ### Relevance in Content Marketing & SEO:
 Search engines aim to save resources by compressing web content during indexing. Pages with high compression ratios (above 4.0) are considered to be spammy or full of fillers. This can hurt your rankings, cause traffic declines, and increase the risk of algorithmic penalties.
