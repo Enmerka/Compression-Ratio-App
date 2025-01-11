@@ -131,12 +131,8 @@ if submit_button:
         high_compression_ratio_count = sum(ratio > 4.0 for ratio in compression_ratios)
 
         # Display the message about pages with compression ratios above 4.0
-        st.markdown(f"**Here are Pages with Higher compression ratios: {high_compression_ratio_count}**", unsafe_allow_html=True)
+        st.markdown(f"**Here are Pages with Higher compression ratios: {high_compression_ratio_count}**", unsafe_allow_html=True))
         
-        # Scrollable table to display the URLs and compression ratios
-        st.subheader("Compression Ratios Table")
-        st.dataframe(results_df, height=300)  # Scrollable table
-
         # Allow download of the results as an Excel file
         st.subheader("Download Results")
         output = BytesIO()
@@ -147,7 +143,10 @@ if submit_button:
             data=output,
             file_name="compression_ratios.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+       
+        # Scrollable table to display the URLs and compression ratios
+        st.subheader("Compression Ratios Table")
+        st.dataframe(results_df, height=300)  # Scrollable table
 
         # Visualize compression ratios
         st.subheader("Compression Ratios Visualization")
