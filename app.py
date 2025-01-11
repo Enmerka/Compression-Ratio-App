@@ -72,39 +72,48 @@ option = st.selectbox(
 # Define a submit button
 submit_button = st.button("Submit")
 
+# Input fields for the different options
+if option == "Paste Sitemap URL":
+    sitemap_url = st.text_input("Enter Sitemap URL:")
+    urls_input_field = False
+    file_input_field = False
+elif option == "Paste URLs":
+    urls_input_field = st.text_area("Paste URLs here (one per line):")
+    sitemap_url = None
+    file_input_field = False
+elif option == "Upload an Excel file with URLs":
+    file_input_field = st.file_uploader("Upload your Excel file (must contain a column named 'URL')", type=['xlsx'])
+    urls_input_field = False
+    sitemap_url = None
+
+# Only proceed if the submit button is pressed
 if submit_button:
     compression_ratios = []
     urls = []
 
-    if option == "Paste Sitemap URL":
-        sitemap_url = st.text_input("Enter Sitemap URL:")
-        if sitemap_url:
-            response = requests.get(sitemap_url)
-            if response.status_code == 200:
-                sitemap = response.text
-                soup = BeautifulSoup(sitemap, 'html.parser')
-                urls = [loc.text for loc in soup.find_all('loc')]
-                st.write(f"Found {len(urls)} URLs in the Sitemap.")
+    if option == "Paste Sitemap URL" and sitemap_url:
+        response = requests.get(sitemap_url)
+        if response.status_code == 200:
+            sitemap = response.text
+            soup = BeautifulSoup(sitemap, 'html.parser')
+            urls = [loc.text for loc in soup.find_all('loc')]
+            st.write(f"Found {len(urls)} URLs in the Sitemap.")
                 
-    elif option == "Paste URLs":
-        urls_input = st.text_area("Paste URLs here (one per line):")
-        if urls_input:
-            urls = urls_input.split("\n")
-            st.write(f"Found {len(urls)} URLs.")
+    elif option == "Paste URLs" and urls_input_field:
+        urls = urls_input_field.split("\n")
+        st.write(f"Found {len(urls)} URLs.")
 
-    elif option == "Upload an Excel file with URLs":
-        uploaded_file = st.file_uploader("Upload your Excel file (must contain a column named 'URL')", type=['xlsx'])
-        if uploaded_file:
-            # Read the uploaded Excel file
-            try:
-                df = pd.read_excel(uploaded_file)
-                if 'URL' not in df.columns:
-                    st.error("The uploaded file must contain a column named 'URL'.")
-                else:
-                    urls = df['URL'].tolist()
-                    st.write(f"Found {len(urls)} URLs in the Excel file.")
-            except Exception as e:
-                st.error(f"Error processing the file: {e}")
+    elif option == "Upload an Excel file with URLs" and file_input_field:
+        # Read the uploaded Excel file
+        try:
+            df = pd.read_excel(file_input_field)
+            if 'URL' not in df.columns:
+                st.error("The uploaded file must contain a column named 'URL'.")
+            else:
+                urls = df['URL'].tolist()
+                st.write(f"Found {len(urls)} URLs in the Excel file.")
+        except Exception as e:
+            st.error(f"Error processing the file: {e}")
 
     if urls:
         # Process the URLs and calculate compression ratios
