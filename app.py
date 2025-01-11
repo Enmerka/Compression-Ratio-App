@@ -72,8 +72,9 @@ option = st.selectbox(
 if option == "Paste Sitemap URL":
     sitemap_url = st.text_input("Enter Sitemap URL:")
     if sitemap_url:
-        response = requests.get(sitemap_url)
-        if response.status_code == 200:
+        try:
+            response = requests.get(sitemap_url)
+            response.raise_for_status()
             sitemap = response.text
             soup = BeautifulSoup(sitemap, 'html.parser')
             urls = [loc.text for loc in soup.find_all('loc')]
@@ -135,6 +136,9 @@ if option == "Paste Sitemap URL":
                 file_name="compression_ratios.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
+
+        except requests.RequestException as e:
+            st.error(f"Error fetching Sitemap URL {sitemap_url}: {e}")
 
 elif option == "Paste URLs":
     urls_input = st.text_area("Paste URLs here (one per line):")
