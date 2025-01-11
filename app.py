@@ -61,7 +61,7 @@ def calculate_compression_ratio(text):
     return original_size / compressed_size
 
 # Streamlit app
-st.title("URL Compression Ratio Calculator")
+st.title("Emmy's Compression Ratio Calculator")
 
 # Option for user to choose input type
 option = st.selectbox(
@@ -143,6 +143,7 @@ if submit_button:
             data=output,
             file_name="compression_ratios.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
        
         # Scrollable table to display the URLs and compression ratios
         st.subheader("Compression Ratios Table")
