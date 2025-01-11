@@ -6,46 +6,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from io import BytesIO
 
-import requests
-from bs4 import BeautifulSoup
-import time
-
-# Function to fetch and parse a webpage (including handling nested sitemaps)
-def fetch_and_parse(url):
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, 'html.parser')
-        return soup
-    except requests.RequestException as e:
-        st.error(f"Error fetching URL {url}: {e}")
-        return None
-
-# Function to extract URLs from a sitemap or sitemap index
-def extract_urls_from_sitemap(sitemap_url):
-    urls = []
-    soup = fetch_and_parse(sitemap_url)
-    if soup:
-        # Check if it's a sitemap index (contains other sitemaps)
-        sitemap_tags = soup.find_all('sitemap')
-        if sitemap_tags:
-            # It's a sitemap index, need to process each referenced sitemap
-            for sitemap in sitemap_tags:
-                loc = sitemap.find('loc')
-                if loc:
-                    nested_sitemap_url = loc.get_text()
-                    nested_urls = extract_urls_from_sitemap(nested_sitemap_url)
-                    urls.extend(nested_urls)  # Recursively fetch URLs from nested sitemaps
-        else:
-            # It's a regular sitemap, extract URLs from 'loc' tags
-            loc_tags = soup.find_all('loc')
-            for loc in loc_tags:
-                urls.append(loc.get_text())
-    return urls
-
 # Function to fetch and parse a webpage
 def fetch_and_parse(url):
     headers = {
