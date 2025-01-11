@@ -5,6 +5,8 @@ import gzip
 import pandas as pd
 import matplotlib.pyplot as plt
 from io import BytesIO
+from openpyxl import Workbook
+from openpyxl.styles import PatternFill
 
 # Function to fetch and parse a webpage
 def fetch_and_parse(url):
@@ -60,6 +62,35 @@ def calculate_compression_ratio(text):
     compressed_size = len(gzip.compress(text.encode('utf-8')))
     return original_size / compressed_size
 
+# Function to create and style the Excel file
+def create_styled_excel(df):
+    # Create a new workbook and add a worksheet
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Compression Ratios"
+
+    # Add headers
+    ws.append(['URL', 'Compression Ratio'])
+
+    # Define the red fill for rows with a compression ratio >= 4.0
+    red_fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
+
+    # Add data to the Excel file, applying the red fill where necessary
+    for index, row in df.iterrows():
+        row_data = [row['URL'], row['Compression Ratio']]
+        ws.append(row_data)
+
+        # Apply red fill to rows with compression ratio >= 4.0
+        if row['Compression Ratio'] >= 4.0:
+            for cell in ws[-1]:
+                cell.fill = red_fill
+
+    # Return the workbook as a BytesIO object
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output
+
 # Streamlit app
 st.title("URL Compression Ratio Calculator")
 
@@ -88,6 +119,9 @@ if option == "Paste Sitemap URL":
                     compression_ratio = calculate_compression_ratio(combined_text)
                     compression_ratios.append(compression_ratio)
 
+            # Create a DataFrame
+            df = pd.DataFrame({'URL': urls, 'Compression Ratio': compression_ratios})
+
             # Visualize compression ratios
             st.subheader("Compression Ratios Visualization")
             plt.figure(figsize=(12, 8))
@@ -104,6 +138,16 @@ if option == "Paste Sitemap URL":
             plt.tight_layout()
             st.pyplot(plt)
 
+            # Allow download of the styled Excel file
+            st.subheader("Download the Excel file")
+            excel_file = create_styled_excel(df)
+            st.download_button(
+                label="Download Results as Excel",
+                data=excel_file,
+                file_name="compression_ratios_with_highlighted_rows.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+
 elif option == "Paste URLs":
     urls_input = st.text_area("Paste URLs here (one per line):")
     if urls_input:
@@ -118,6 +162,9 @@ elif option == "Paste URLs":
                 combined_text = extract_text_selectively(soup)
                 compression_ratio = calculate_compression_ratio(combined_text)
                 compression_ratios.append(compression_ratio)
+
+        # Create a DataFrame
+        df = pd.DataFrame({'URL': urls, 'Compression Ratio': compression_ratios})
 
         # Visualize compression ratios
         st.subheader("Compression Ratios Visualization")
@@ -134,6 +181,16 @@ elif option == "Paste URLs":
         plt.legend()
         plt.tight_layout()
         st.pyplot(plt)
+
+        # Allow download of the styled Excel file
+        st.subheader("Download the Excel file")
+        excel_file = create_styled_excel(df)
+        st.download_button(
+            label="Download Results as Excel",
+            data=excel_file,
+            file_name="compression_ratios_with_highlighted_rows.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
 elif option == "Upload an Excel file with URLs":
     uploaded_file = st.file_uploader("Upload your Excel file (must contain a column named 'URL')", type=['xlsx'])
@@ -161,13 +218,11 @@ elif option == "Upload an Excel file with URLs":
                 st.dataframe(df)
 
                 # Allow download of results
-                output = BytesIO()
-                df.to_excel(output, index=False, engine='openpyxl')
-                output.seek(0)
+                excel_file = create_styled_excel(df)
                 st.download_button(
                     label="Download Results as Excel",
-                    data=output,
-                    file_name="compression_ratios.xlsx",
+                    data=excel_file,
+                    file_name="compression_ratios_with_highlighted_rows.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
 
