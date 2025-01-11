@@ -81,8 +81,9 @@ def create_styled_excel(df):
         ws.append(row_data)
 
         # Apply red fill to rows with compression ratio >= 4.0
+        current_row = ws.max_row
         if row['Compression Ratio'] >= 4.0:
-            for cell in ws[-1]:
+            for cell in ws[current_row]:
                 cell.fill = red_fill
 
     # Return the workbook as a BytesIO object
@@ -241,6 +242,3 @@ elif option == "Upload an Excel file with URLs":
                 plt.legend()
                 plt.tight_layout()
                 st.pyplot(plt)
-
-        except Exception as e:
-            st.error(f"Error processing the file: {e}")
