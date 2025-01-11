@@ -78,14 +78,15 @@ if option == "Paste Sitemap URL":
             soup = BeautifulSoup(sitemap, 'html.parser')
             urls = [loc.text for loc in soup.find_all('loc')]
             st.write(f"Found {len(urls)} URLs in the Sitemap.")
+            
             # Process the URLs and calculate compression ratios
             compression_ratios = []
-            for url in urls:
-                st.write(f"Processing: {url}")
-                soup = fetch_and_parse(url)
-                combined_text = extract_text_selectively(soup)
-                compression_ratio = calculate_compression_ratio(combined_text)
-                compression_ratios.append(compression_ratio)
+            with st.spinner("Processing URLs..."):
+                for url in urls:
+                    soup = fetch_and_parse(url)
+                    combined_text = extract_text_selectively(soup)
+                    compression_ratio = calculate_compression_ratio(combined_text)
+                    compression_ratios.append(compression_ratio)
 
             # Visualize compression ratios
             st.subheader("Compression Ratios Visualization")
@@ -108,14 +109,15 @@ elif option == "Paste URLs":
     if urls_input:
         urls = urls_input.split("\n")
         st.write(f"Found {len(urls)} URLs.")
+        
         # Process the URLs and calculate compression ratios
         compression_ratios = []
-        for url in urls:
-            st.write(f"Processing: {url}")
-            soup = fetch_and_parse(url)
-            combined_text = extract_text_selectively(soup)
-            compression_ratio = calculate_compression_ratio(combined_text)
-            compression_ratios.append(compression_ratio)
+        with st.spinner("Processing URLs..."):
+            for url in urls:
+                soup = fetch_and_parse(url)
+                combined_text = extract_text_selectively(soup)
+                compression_ratio = calculate_compression_ratio(combined_text)
+                compression_ratios.append(compression_ratio)
 
         # Visualize compression ratios
         st.subheader("Compression Ratios Visualization")
@@ -146,7 +148,6 @@ elif option == "Upload an Excel file with URLs":
                 with st.spinner("Processing URLs..."):
                     for index, row in df.iterrows():
                         url = row['URL']
-                        st.write(f"Processing: {url}")
                         soup = fetch_and_parse(url)
                         combined_text = extract_text_selectively(soup)
                         compression_ratio = calculate_compression_ratio(combined_text)
