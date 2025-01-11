@@ -69,9 +69,6 @@ option = st.selectbox(
     ["Paste Sitemap URL", "Paste URLs", "Upload an Excel file with URLs"]
 )
 
-# Define a submit button
-submit_button = st.button("Submit")
-
 # Input fields for the different options
 if option == "Paste Sitemap URL":
     sitemap_url = st.text_input("Enter Sitemap URL:")
@@ -85,6 +82,9 @@ elif option == "Upload an Excel file with URLs":
     file_input_field = st.file_uploader("Upload your Excel file (must contain a column named 'URL')", type=['xlsx'])
     urls_input_field = False
     sitemap_url = None
+    
+# Define a submit button
+submit_button = st.button("Submit")
 
 # Only proceed if the submit button is pressed
 if submit_button:
