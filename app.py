@@ -168,8 +168,7 @@ if submit_button:
 # Sidebar for app instructions
 st.sidebar.title("How to Use This App")
 st.sidebar.markdown("""
-### Join this community and Learn More
-I have linked a Google form [here](https://forms.gle/ApsYbueBdggSvgFD6) 
+### Join this community [here](https://forms.gle/ApsYbueBdggSvgFD6) 
 
 This tool helps content teams calculate the compression ratio of pages in order assess the quality and relevance of their content. The compression ratio gives insights into the following:
 
