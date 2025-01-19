@@ -175,6 +175,9 @@ This tool helps content teams calculate the compression ratio of pages in order 
 - **Potential for ranking instabilities**
 - **Redundancy of words, context, semantics, and entity relationships on the page**
 
+### Join this community and Learn More
+I have linked a Google form [here](https://forms.gle/ApsYbueBdggSvgFD6) 
+
 ### What is a Compression Ratio?
 The compression ratio is the degree to which a page can be compressed without losing its identity or meaning. A higher compression ratio suggests that the content on the page is redundant, filled with filler words, and potentially low in quality. In contrast, a lower ratio suggests that the page is rich in content.
 
