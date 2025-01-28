@@ -168,7 +168,7 @@ if submit_button:
 # Sidebar for app instructions
 st.sidebar.title("How to Use This App")
 st.sidebar.markdown("""
-### Join our knowledge loving community [here](https://forms.gle/ApsYbueBdggSvgFD6) 
+### Join our knowledge loving community [here](https://chat.whatsapp.com/KiHGrvcJX0i8kXP18aL2g2) 
 
 This tool helps content teams calculate the compression ratio of pages in order assess the quality and relevance of their content. The compression ratio gives insights into the following:
 
